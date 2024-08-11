@@ -16,7 +16,7 @@ if not openai_api_key:
 else:
     # Let the user upload multiple files via `st.file_uploader`.
     uploaded_files = st.file_uploader(
-        "Upload documents (.txt or .md)", type=("txt", "md"), accept_multiple_files=True
+        "Upload documents (.txt, .md, or .jsonl)", type=("txt", "md", "jsonl"), accept_multiple_files=True
     )
 
     # Ask the user for a question via `st.text_area`.
@@ -28,7 +28,14 @@ else:
 
     if uploaded_files and question:
         # Process the uploaded files
-        documents = [uploaded_file.read().decode() for uploaded_file in uploaded_files]
+        documents = []
+        for uploaded_file in uploaded_files:
+            if uploaded_file.name.endswith('.jsonl'):
+                import json
+                jsonl_content = uploaded_file.read().decode().splitlines()
+                documents.extend([json.loads(line)['content'] for line in jsonl_content if line.strip()])
+            else:
+                documents.append(uploaded_file.read().decode())
 
         # Use the new document_processor module to classify and answer the question
         with st.spinner("Processing documents and generating answer..."):
