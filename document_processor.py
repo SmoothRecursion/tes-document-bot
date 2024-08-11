@@ -1,52 +1,60 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from openai import OpenAI
+from pydantic import BaseModel
+import tiktoken
+
+class ClassifiedSnippet(BaseModel):
+    snippet: str
+    classification: str
 
 def classify_and_process_documents(documents, question, openai_api_key):
-    # Initialize the language model
-    llm = ChatOpenAI(api_key=openai_api_key)
+    client = OpenAI(api_key=openai_api_key)
 
-    # Create a text splitter
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+        encoding = tiktoken.get_encoding(encoding_name)
+        num_tokens = len(encoding.encode(string))
+        return num_tokens
 
-    # Function to classify a document snippet
+    def split_text(text, max_tokens=1000):
+        words = text.split()
+        chunks = []
+        current_chunk = []
+
+        for word in words:
+            current_chunk.append(word)
+            if num_tokens_from_string(" ".join(current_chunk)) > max_tokens:
+                chunks.append(" ".join(current_chunk[:-1]))
+                current_chunk = [word]
+
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+        return chunks
+
     def classify_snippet(snippet):
-        classification_prompt = ChatPromptTemplate.from_template(
-            "Classify the following text snippet into one of these categories: "
-            "Grease, Oil Filters, Competitor Oil Filters, or Oils. "
-            "Only respond with the category name.\n\nText: {snippet}"
+        completion = client.chat.completions.create(
+            model="gpt-4-0613",
+            messages=[
+                {"role": "system", "content": "Classify the following text snippet into one of these categories: Grease, Oil Filters, Competitor Oil Filters, or Oils. Only respond with the category name."},
+                {"role": "user", "content": f"Text: {snippet}"}
+            ]
         )
-        classification_chain = classification_prompt | llm | StrOutputParser()
-        return classification_chain.invoke({"snippet": snippet})
+        return completion.choices[0].message.content.strip()
 
-    # Process each document
     processed_docs = []
     for doc in documents:
-        snippets = text_splitter.split_text(doc)
+        snippets = split_text(doc)
         classified_snippets = [
-            {"snippet": snippet, "classification": classify_snippet(snippet)}
+            ClassifiedSnippet(snippet=snippet, classification=classify_snippet(snippet))
             for snippet in snippets
         ]
         processed_docs.extend(classified_snippets)
 
-    # Create a prompt template for answering the question
-    answer_prompt = ChatPromptTemplate.from_template(
-        "You are an expert in automotive products. "
-        "Answer the following question based on the provided classified document snippets:\n"
-        "Question: {question}\n\n"
-        "Classified Snippets:\n{classified_snippets}\n\n"
-        "Provide a comprehensive answer, mentioning the relevant classifications when appropriate."
+    completion = client.chat.completions.create(
+        model="gpt-4-0613",
+        messages=[
+            {"role": "system", "content": "You are an expert in automotive products. Answer the following question based on the provided classified document snippets. Provide a comprehensive answer, mentioning the relevant classifications when appropriate."},
+            {"role": "user", "content": f"Question: {question}\n\nClassified Snippets:\n{processed_docs}"}
+        ]
     )
 
-    # Create the full chain
-    chain = (
-        {"question": RunnablePassthrough(), "classified_snippets": lambda _: processed_docs}
-        | answer_prompt
-        | llm
-        | StrOutputParser()
-    )
-
-    # Run the chain
-    return chain.invoke(question)
+    return completion.choices[0].message.content.strip()
