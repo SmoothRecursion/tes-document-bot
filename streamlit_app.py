@@ -19,26 +19,31 @@ else:
     # Create an OpenAI client.
     client = OpenAI(api_key=openai_api_key)
 
-    # Let the user upload a file via `st.file_uploader`.
-    uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)", type=("txt", "md")
+    # Let the user upload multiple files via `st.file_uploader`.
+    uploaded_files = st.file_uploader(
+        "Upload documents (.txt or .md)", type=("txt", "md"), accept_multiple_files=True
     )
 
     # Ask the user for a question via `st.text_area`.
     question = st.text_area(
-        "Now ask a question about the document!",
-        placeholder="Can you give me a short summary?",
-        disabled=not uploaded_file,
+        "Now ask a question about the documents!",
+        placeholder="Can you give me a short summary of all the documents?",
+        disabled=not uploaded_files,
     )
 
-    if uploaded_file and question:
+    if uploaded_files and question:
 
-        # Process the uploaded file and question.
-        document = uploaded_file.read().decode()
+        # Process the uploaded files and question.
+        documents = []
+        for uploaded_file in uploaded_files:
+            document = uploaded_file.read().decode()
+            documents.append(document)
+        
+        combined_documents = "\n\n---\n\n".join(documents)
         messages = [
             {
                 "role": "user",
-                "content": f"Here's a document: {document} \n\n---\n\n {question}",
+                "content": f"Here are the documents:\n\n{combined_documents}\n\n---\n\n{question}",
             }
         ]
 
