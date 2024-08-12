@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from backend.document_processing import pdf_processor, jsonl_processor
+# from backend.document_processing import pdf_processor, jsonl_processor
 from backend.database import mongodb_client
 from backend.ai_models import model_loader
 from backend.utils import text_splitter, metadata_extractor
