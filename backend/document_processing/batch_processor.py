@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
-# from backend.document_processing import pdf_processor, jsonl_processor
+from backend.document_processing import pdf_processor, jsonl_processor
 from backend.database import mongodb_client
 from backend.ai_models import model_loader
 from backend.utils import text_splitter, metadata_extractor
@@ -17,8 +17,13 @@ def process_file(file_path: str, file_name: str) -> Dict[str, Any]:
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
     
+    # Add file-specific metadata
     metadata['file_name'] = file_name
     metadata['file_type'] = file_type
+    
+    # Extract additional metadata if needed
+    additional_metadata = metadata_extractor.extract_metadata(content)
+    metadata.update(additional_metadata)
     
     return {'content': content, 'metadata': metadata}
 
