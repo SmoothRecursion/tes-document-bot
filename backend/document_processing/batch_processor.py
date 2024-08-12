@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from backend.document_processing import pdf_processor, jsonl_processor
 from backend.database import mongodb_client
