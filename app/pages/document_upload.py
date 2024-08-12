@@ -1,8 +1,8 @@
 import streamlit as st
 import os
 import tempfile
-from document_processing import batch_processor
-from database import mongodb_client
+from backend.document_processing import batch_processor
+from backend.database import mongodb_client
 
 def render():
     st.header("Upload Documents")
