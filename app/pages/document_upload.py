@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import tempfile
-from backend import document_processing, database
+from ...backend import document_processing, database
 
 def render():
     st.header("Upload Documents")
