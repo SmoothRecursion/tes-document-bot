@@ -1,6 +1,6 @@
 import streamlit as st
-from pages import chat, document_upload, search
-from config import app_config
+from pages import chat, document_upload
+# from config import app_config
 
 def main():
     st.set_page_config(
@@ -19,14 +19,12 @@ def main():
 
     if page == "Upload":
         document_upload.render()
-    elif page == "Search":
-        search.render()
     elif page == "Chat":
         chat.render()
 
     # Check for OpenAI API key
-    if not app_config.OPENAI_API_KEY:
-        st.sidebar.warning("OpenAI API key not set. Please set it in the config.")
+    # if not app_config.OPENAI_API_KEY:
+    #     st.sidebar.warning("OpenAI API key not set. Please set it in the config.")
 
 if __name__ == "__main__":
     main()
