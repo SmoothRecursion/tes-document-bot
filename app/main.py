@@ -1,7 +1,5 @@
 import streamlit as st
-import os
 from pages import chat, document_upload, search
-from components import chatbot, document_viewer
 from config import app_config
 
 def main():
