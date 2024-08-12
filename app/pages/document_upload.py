@@ -1,8 +1,7 @@
 import streamlit as st
 import os
 import tempfile
-from backend.document_processing import batch_processor
-from backend.database import mongodb_client
+from backend import document_processing, database
 
 def render():
     st.header("Upload Documents")
@@ -33,7 +32,7 @@ def render():
                 progress_bar.progress(progress)
                 status_text.text(f"Processing files: {progress:.0%}")
 
-            batch_processor.process_files(temp_files, file_names, update_progress)
+            document_processing.batch_processor.process_files(temp_files, file_names, update_progress)
             st.success("All files processed successfully!")
         except Exception as e:
             st.error(f"Error processing files: {str(e)}")
@@ -47,6 +46,6 @@ def render():
 
     # Display uploaded documents
     st.subheader("Uploaded Documents")
-    documents = mongodb_client.get_all_documents()
+    documents = database.mongodb_client.AtlasClient().find("documents")
     for doc in documents:
         st.write(f"- {doc['metadata']['file_name']} (Type: {doc['metadata']['file_type']})")
