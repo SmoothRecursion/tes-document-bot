@@ -2,13 +2,13 @@ import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from langchain.vectorstores import MongoDBAtlasVectorSearch
-from langchain.embeddings import OpenAIEmbeddings
+from backend.ai_models.model_loader import load_embedding_model
 
 # Load environment variables
 load_dotenv()
 
 class AtlasClient:
-    def __init__(self, atlas_uri=None, dbname="automotive_docs"):
+    def __init__(self, atlas_uri=None, dbname="automotive_docs", embedding_model="openai"):
         if atlas_uri is None:
             atlas_uri = os.getenv("MONGODB_URI")
         if not atlas_uri:
@@ -57,7 +57,7 @@ class AtlasClient:
 
     def initialize_vector_store(self, collection_name="documents", index_name="default"):
         """Initialize the vector store for similarity search."""
-        embeddings = OpenAIEmbeddings()
+        embeddings = load_embedding_model(self.embedding_model)
         self.vector_store = MongoDBAtlasVectorSearch(
             collection=self.get_collection(collection_name),
             embedding=embeddings,
