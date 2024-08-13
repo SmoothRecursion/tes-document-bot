@@ -9,6 +9,9 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain import hub
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import END, StateGraph, START
+from backend.database.mongodb_client import AtlasClient
+from langchain.vectorstores import MongoDBAtlasVectorSearch
+from langchain.embeddings import OpenAIEmbeddings
 
 # Data model for grading documents
 class GradeDocuments(BaseModel):
@@ -24,9 +27,18 @@ class GraphState(TypedDict):
     documents: List[str]
 
 # Initialize LLM and tools
-llm = ChatOpenAI(model="4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeDocuments)
 web_search_tool = TavilySearchResults(k=3)
+
+# Initialize MongoDB Atlas client and vector store
+atlas_client = AtlasClient()
+embeddings = OpenAIEmbeddings()
+vector_store = MongoDBAtlasVectorSearch(
+    collection=atlas_client.get_collection("documents"),
+    embedding=embeddings,
+    index_name="default"  # Make sure this matches your Atlas Search index name
+)
 
 # Prompts
 system_grade = """You are a grader assessing relevance of a retrieved document to a user question. 
@@ -55,8 +67,9 @@ def retrieve(state):
     """Retrieve documents"""
     print("---RETRIEVE---")
     question = state["question"]
-    # Placeholder for actual retrieval logic
-    documents = [Document(page_content="Sample document content")]
+    # Use vector store to retrieve relevant documents
+    docs = vector_store.similarity_search(question, k=5)
+    documents = [Document(page_content=doc.page_content, metadata=doc.metadata) for doc in docs]
     return {"documents": documents, "question": question}
 
 def generate(state):
@@ -64,7 +77,8 @@ def generate(state):
     print("---GENERATE---")
     question = state["question"]
     documents = state["documents"]
-    generation = rag_chain.invoke({"context": documents, "question": question})
+    context = "\n\n".join([doc.page_content for doc in documents])
+    generation = rag_chain.invoke({"context": context, "question": question})
     return {"documents": documents, "question": question, "generation": generation}
 
 def grade_documents(state):

@@ -1,6 +1,5 @@
 import streamlit as st
-from backend.ai_models import model_loader
-from backend.database.mongodb_client import AtlasClient
+from backend.ai_models.langgraph_crag import run_crag
 
 def render():
     st.header("Chat with Your Documents")
@@ -22,18 +21,8 @@ def render():
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         with st.spinner("Thinking..."):
-            # Get the CRAG model
-            crag_model = model_loader.get_crag_model()
-            
-            # Fetch relevant documents from the database
-            db_client = AtlasClient()
-            documents = db_client.find("documents", limit=10)  # Adjust limit as needed
-            
-            # Prepare the context for the model
-            context = "\n".join([doc.get('content', '') for doc in documents])
-            
             # Generate response using the CRAG model
-            response = crag_model.generate(context, prompt)
+            response = run_crag(prompt)
 
         # Display assistant response in chat message container
         with st.chat_message("assistant"):
