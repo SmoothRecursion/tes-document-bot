@@ -4,7 +4,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from backend.document_processing import jsonl_processor
 from backend.database import mongodb_client
 from backend.ai_models.model_loader import load_embedding_model, get_crag_model
-from backend.utils import text_splitter, metadata_extractor
+from backend.utils.text_splitter import split_text
+from backend.utils.metadata_extractor import extract_metadata
 
 def process_file(file_path: str, file_name: str) -> Generator[Dict[str, Any], None, None]:
     """Process a single file and yield its metadata and content."""
@@ -16,8 +17,8 @@ def process_file(file_path: str, file_name: str) -> Generator[Dict[str, Any], No
             metadata['file_name'] = file_name
             metadata['file_type'] = file_type
             
-            # Extract additional metadata if needed
-            additional_metadata = metadata_extractor.extract_metadata(content)
+            # Extract additional metadata
+            additional_metadata = extract_metadata(content)
             metadata.update(additional_metadata)
             
             yield {'content': content, 'metadata': metadata}
@@ -47,7 +48,7 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
         content = processed_data['content']
         metadata = processed_data['metadata']
         
-        chunks = text_splitter.split_text(content)
+        chunks = split_text(content)
         
         def embedding_progress(current, total):
             if progress_callback:
