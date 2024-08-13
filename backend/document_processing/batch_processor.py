@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from backend.document_processing import pdf_processor, jsonl_processor
+from backend.document_processing import jsonl_processor
 from backend.database import mongodb_client
 from backend.ai_models import model_loader
 from backend.utils import text_splitter, metadata_extractor
@@ -10,10 +10,7 @@ def process_file(file_path: str, file_name: str) -> Generator[Dict[str, Any], No
     """Process a single file and yield its metadata and content."""
     file_type = os.path.splitext(file_name)[1].lower()
     
-    if file_type == '.pdf':
-        content, metadata = pdf_processor.process_pdf(file_path)
-        yield {'content': content, 'metadata': metadata}
-    elif file_type in ['.jsonl', '.json']:
+    if file_type in ['.jsonl', '.json']:
         for content, metadata in jsonl_processor.process_jsonl(file_path):
             # Add file-specific metadata
             metadata['file_name'] = file_name
