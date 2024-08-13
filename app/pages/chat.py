@@ -1,6 +1,5 @@
 import streamlit as st
-from components import chatbot
-from backend.ai_models import response_generator
+# from backend.ai_models import response_generator
 
 def render():
     st.header("Chat with Your Documents")
@@ -21,12 +20,12 @@ def render():
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
 
-        with st.chat_message("assistant"):
-            response = response_generator.generate_response(prompt)
-            st.markdown(response)
+        # with st.chat_message("assistant"):
+            # response = response_generator.generate_response(prompt)
+            # st.markdown(response)
         
         # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        # st.session_state.messages.append({"role": "assistant", "content": response})
 
     # Add a button to clear chat history
     if st.button("Clear Chat History"):
