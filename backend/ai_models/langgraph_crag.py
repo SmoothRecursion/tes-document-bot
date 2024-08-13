@@ -32,7 +32,7 @@ structured_llm_grader = llm.with_structured_output(GradeDocuments)
 web_search_tool = TavilySearchResults(k=3)
 
 # Initialize MongoDB Atlas client and vector store
-atlas_client = AtlasClient()
+atlas_client = AtlasClient(embedding_model="openai")  # You can change this to "huggingface" if needed
 atlas_client.initialize_vector_store()
 
 # Prompts
