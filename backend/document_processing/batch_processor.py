@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from backend.document_processing import jsonl_processor
 from backend.database import mongodb_client
-from backend.ai_models import model_loader
+from backend.ai_models.model_loader import load_embedding_model, get_crag_model
 from backend.utils import text_splitter, metadata_extractor
 
 def process_file(file_path: str, file_name: str) -> Generator[Dict[str, Any], None, None]:
@@ -24,21 +24,21 @@ def process_file(file_path: str, file_name: str) -> Generator[Dict[str, Any], No
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 
-def create_embeddings(texts: List[str], progress_callback=None) -> List[List[float]]:
+def create_embeddings(texts: List[str], model_name: str = "openai", progress_callback=None) -> List[List[float]]:
     """Create embeddings for a list of texts."""
-    model = model_loader.load_embedding_model()
+    model = load_embedding_model(model_name)
     embeddings = []
     total = len(texts)
     
     for i, text in enumerate(texts):
-        embedding = model.get_embedding(text)
+        embedding = model.embed_query(text)
         embeddings.append(embedding)
         if progress_callback:
             progress_callback(i + 1, total)
     
     return embeddings
 
-def batch_process_file(file_path: str, file_name: str, progress_callback=None) -> None:
+def batch_process_file(file_path: str, file_name: str, embedding_model: str = "openai", progress_callback=None) -> None:
     """Process a file in batches, create embeddings, and store in the database."""
     processed_data_generator = process_file(file_path, file_name)
     
@@ -53,7 +53,7 @@ def batch_process_file(file_path: str, file_name: str, progress_callback=None) -
             if progress_callback:
                 progress_callback(current / total)
         
-        embeddings = create_embeddings(chunks, embedding_progress)
+        embeddings = create_embeddings(chunks, embedding_model, embedding_progress)
         
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
             document = {
@@ -68,13 +68,18 @@ def batch_process_file(file_path: str, file_name: str, progress_callback=None) -
         
         chunk_index += len(chunks)
 
-def process_files(file_paths: List[str], file_names: List[str], progress_callback=None) -> None:
+def process_files(file_paths: List[str], file_names: List[str], embedding_model: str = "openai", progress_callback=None) -> None:
     """Process multiple files concurrently."""
     with ThreadPoolExecutor() as executor:
         futures = []
         for file_path, file_name in zip(file_paths, file_names):
-            future = executor.submit(batch_process_file, file_path, file_name, progress_callback)
+            future = executor.submit(batch_process_file, file_path, file_name, embedding_model, progress_callback)
             futures.append(future)
         
         for future in as_completed(futures):
             future.result()  # This will raise any exceptions that occurred during processing
+
+def run_crag_model(question: str) -> str:
+    """Run the CRAG model with the given question."""
+    crag_model = get_crag_model()
+    return crag_model(question)
