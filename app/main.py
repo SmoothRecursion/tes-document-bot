@@ -16,10 +16,18 @@ def main():
         layout="wide"
     )
 
-    st.title("📄 Automotive Document Question Answering")
-    st.write(
-        "Upload automotive-related documents, search through them, and ask questions about their content."
-    )
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio("Go to", ["Home", "Chat", "Document Upload"])
+
+    if page == "Home":
+        st.title("📄 Automotive Document Question Answering")
+        st.write(
+            "Upload automotive-related documents, search through them, and ask questions about their content."
+        )
+    elif page == "Chat":
+        chat.render()
+    elif page == "Document Upload":
+        document_upload.render()
 
     # Check for OpenAI API key
     # if not app_config.OPENAI_API_KEY:
