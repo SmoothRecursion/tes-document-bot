@@ -16,6 +16,7 @@ class AtlasClient:
         self.mongodb_client = MongoClient(atlas_uri)
         self.database = self.mongodb_client[dbname]
         self.vector_store = None
+        self.embedding_model = embedding_model
 
     def ping(self):
         """A quick way to test if we can connect to Atlas instance"""
