@@ -68,7 +68,7 @@ def retrieve(state):
     print("---RETRIEVE---")
     question = state["question"]
     # Use vector store to retrieve relevant documents
-    docs = vector_store.similarity_search(question, k=5)
+    docs = atlas_client.similarity_search(question, k=5)
     documents = [Document(page_content=doc.page_content, metadata=doc.metadata) for doc in docs]
     return {"documents": documents, "question": question}
 
