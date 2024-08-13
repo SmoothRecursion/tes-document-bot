@@ -48,7 +48,7 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
         content = processed_data['content']
         metadata = processed_data['metadata']
         
-        chunks = split_text(content)
+        chunks = split_text(content, chunk_size=1000, chunk_overlap=100)
         
         def embedding_progress(current, total):
             if progress_callback:

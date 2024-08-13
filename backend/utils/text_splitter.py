@@ -1,26 +1,18 @@
 from typing import List
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-def split_text(text: str, max_chunk_size: int = 1000, overlap: int = 100) -> List[str]:
+def split_text(text: str, chunk_size: int = 1000, chunk_overlap: int = 100) -> List[str]:
     """
-    Split the input text into chunks of approximately max_chunk_size characters,
-    with a specified overlap between chunks.
+    Split the input text into chunks using LangChain's RecursiveCharacterTextSplitter.
+    
+    :param text: The input text to be split.
+    :param chunk_size: The maximum size of each chunk.
+    :param chunk_overlap: The overlap between chunks.
+    :return: A list of text chunks.
     """
-    words = text.split()
-    chunks = []
-    current_chunk = []
-    current_size = 0
-
-    for word in words:
-        if current_size + len(word) + 1 > max_chunk_size and current_chunk:
-            chunks.append(' '.join(current_chunk))
-            overlap_words = current_chunk[-overlap:]
-            current_chunk = overlap_words
-            current_size = sum(len(w) + 1 for w in overlap_words)
-        
-        current_chunk.append(word)
-        current_size += len(word) + 1
-
-    if current_chunk:
-        chunks.append(' '.join(current_chunk))
-
-    return chunks
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+    )
+    return text_splitter.split_text(text)
