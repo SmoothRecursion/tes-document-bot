@@ -71,6 +71,10 @@ class AtlasClient:
             raise ValueError("Vector store is not initialized. Call initialize_vector_store() first.")
         return self.vector_store.similarity_search(query, k=k)
 
+    def list_collections(self):
+        """List all available collections in the database."""
+        return self.database.list_collection_names()
+
 # Usage example:
 if __name__ == "__main__":
     client = AtlasClient()
