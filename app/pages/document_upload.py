@@ -1,9 +1,9 @@
 import streamlit as st
 import os
 import tempfile
-from backend import document_processing, database
+from backend import document_processing
 
-def render():
+def render(atlas_client):
     st.header("Upload Documents")
     
     uploaded_files = st.file_uploader(

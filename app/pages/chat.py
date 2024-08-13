@@ -1,7 +1,7 @@
 import streamlit as st
 from backend.ai_models.langgraph_crag import run_crag
 
-def render():
+def render(atlas_client):
     st.header("Chat with Your Documents")
 
     # Initialize chat history

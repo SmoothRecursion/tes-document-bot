@@ -7,9 +7,12 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 
 from pages import chat, document_upload
-# from config import app_config
+from backend.database.mongodb_client import AtlasClient
+from backend.ai_models.langgraph_crag import initialize_atlas_client
 
 def main():
+    # Initialize AtlasClient
+    atlas_client = initialize_atlas_client()
     st.set_page_config(
         page_title="Automotive Document Q&A",
         page_icon="📄",
@@ -25,9 +28,9 @@ def main():
             "Upload automotive-related documents, search through them, and ask questions about their content."
         )
     elif page == "Chat":
-        chat.render()
+        chat.render(atlas_client)
     elif page == "Document Upload":
-        document_upload.render()
+        document_upload.render(atlas_client)
 
     # Check for OpenAI API key
     # if not app_config.OPENAI_API_KEY:
