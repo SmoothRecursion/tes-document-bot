@@ -33,12 +33,7 @@ web_search_tool = TavilySearchResults(k=3)
 
 # Initialize MongoDB Atlas client and vector store
 atlas_client = AtlasClient()
-embeddings = OpenAIEmbeddings()
-vector_store = MongoDBAtlasVectorSearch(
-    collection=atlas_client.get_collection("documents"),
-    embedding=embeddings,
-    index_name="default"  # Make sure this matches your Atlas Search index name
-)
+atlas_client.initialize_vector_store()
 
 # Prompts
 system_grade = """You are a grader assessing relevance of a retrieved document to a user question. 
