@@ -10,10 +10,6 @@ from langchain import hub
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import END, StateGraph, START
 
-# Ensure environment variables are set
-os.environ["OPENAI_API_KEY"] = "<your-api-key>"
-os.environ["TAVILY_API_KEY"] = "<your-api-key>"
-
 # Data model for grading documents
 class GradeDocuments(BaseModel):
     """Binary score for relevance check on retrieved documents."""
@@ -28,7 +24,7 @@ class GraphState(TypedDict):
     documents: List[str]
 
 # Initialize LLM and tools
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
+llm = ChatOpenAI(model="4o-mini", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeDocuments)
 web_search_tool = TavilySearchResults(k=3)
 
