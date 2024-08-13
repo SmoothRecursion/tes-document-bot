@@ -46,6 +46,6 @@ def render(atlas_client):
 
     # Display uploaded documents
     st.subheader("Uploaded Documents")
-    documents = database.mongodb_client.AtlasClient().find("documents")
+    documents = atlas_client.find("documents")
     for doc in documents:
         st.write(f"- {doc['metadata']['file_name']} (Type: {doc['metadata']['file_type']})")
