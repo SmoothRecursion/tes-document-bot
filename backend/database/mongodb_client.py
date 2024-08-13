@@ -1,6 +1,8 @@
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
+from langchain.vectorstores import MongoDBAtlasVectorSearch
+from langchain.embeddings import OpenAIEmbeddings
 
 # Load environment variables
 load_dotenv()
@@ -13,6 +15,7 @@ class AtlasClient:
             raise ValueError("MONGODB_URI environment variable is not set")
         self.mongodb_client = MongoClient(atlas_uri)
         self.database = self.mongodb_client[dbname]
+        self.vector_store = None
 
     def ping(self):
         """A quick way to test if we can connect to Atlas instance"""
@@ -51,6 +54,21 @@ class AtlasClient:
         """Search for documents based on a text query."""
         collection = self.get_collection(collection_name)
         return list(collection.find({"$text": {"$search": query}}).limit(limit))
+
+    def initialize_vector_store(self, collection_name="documents", index_name="default"):
+        """Initialize the vector store for similarity search."""
+        embeddings = OpenAIEmbeddings()
+        self.vector_store = MongoDBAtlasVectorSearch(
+            collection=self.get_collection(collection_name),
+            embedding=embeddings,
+            index_name=index_name
+        )
+
+    def similarity_search(self, query, k=5):
+        """Perform a similarity search using the vector store."""
+        if self.vector_store is None:
+            raise ValueError("Vector store is not initialized. Call initialize_vector_store() first.")
+        return self.vector_store.similarity_search(query, k=k)
 
 # Usage example:
 if __name__ == "__main__":
