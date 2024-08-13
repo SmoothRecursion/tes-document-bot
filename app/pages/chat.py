@@ -1,5 +1,6 @@
 import streamlit as st
-# from backend.ai_models import response_generator
+from backend.ai_models import model_loader
+from backend.database.mongodb_client import AtlasClient
 
 def render():
     st.header("Chat with Your Documents")
@@ -20,12 +21,26 @@ def render():
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
 
-        # with st.chat_message("assistant"):
-            # response = response_generator.generate_response(prompt)
-            # st.markdown(response)
+        with st.spinner("Thinking..."):
+            # Get the CRAG model
+            crag_model = model_loader.get_crag_model()
+            
+            # Fetch relevant documents from the database
+            db_client = AtlasClient()
+            documents = db_client.find("documents", limit=10)  # Adjust limit as needed
+            
+            # Prepare the context for the model
+            context = "\n".join([doc.get('content', '') for doc in documents])
+            
+            # Generate response using the CRAG model
+            response = crag_model.generate(context, prompt)
+
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            st.markdown(response)
         
         # Add assistant response to chat history
-        # st.session_state.messages.append({"role": "assistant", "content": response})
+        st.session_state.messages.append({"role": "assistant", "content": response})
 
     # Add a button to clear chat history
     if st.button("Clear Chat History"):
