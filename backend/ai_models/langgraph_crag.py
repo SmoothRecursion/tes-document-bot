@@ -9,7 +9,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain import hub
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import END, StateGraph, START
-from backend.database.mongodb_client import AtlasClient
 from langchain.vectorstores import MongoDBAtlasVectorSearch
 from langchain.embeddings import OpenAIEmbeddings
 
@@ -31,9 +30,14 @@ llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeDocuments)
 web_search_tool = TavilySearchResults(k=3)
 
+def initialize_atlas_client():
+    from backend.database.mongodb_client import AtlasClient
+    atlas_client = AtlasClient(embedding_model="openai")  # You can change this to "huggingface" if needed
+    atlas_client.initialize_vector_store()
+    return atlas_client
+
 # Initialize MongoDB Atlas client and vector store
-atlas_client = AtlasClient(embedding_model="openai")  # You can change this to "huggingface" if needed
-atlas_client.initialize_vector_store()
+atlas_client = initialize_atlas_client()
 
 # Prompts
 system_grade = """You are a grader assessing relevance of a retrieved document to a user question. 
