@@ -21,14 +21,6 @@ def main():
         "Upload automotive-related documents, search through them, and ask questions about their content."
     )
 
-    # Sidebar for navigation
-    page = st.sidebar.selectbox("Choose a page", ["Upload", "Search", "Chat"])
-
-    if page == "Upload":
-        document_upload.render()
-    elif page == "Chat":
-        chat.render()
-
     # Check for OpenAI API key
     # if not app_config.OPENAI_API_KEY:
     #     st.sidebar.warning("OpenAI API key not set. Please set it in the config.")
