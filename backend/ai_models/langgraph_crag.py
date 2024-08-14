@@ -151,8 +151,8 @@ workflow.add_edge("generate", END)
 app = workflow.compile()
 
 # Draw and save the graph as a Mermaid PNG
-graph = workflow.get_graph()
-graph.draw_mermaid_png("crag_workflow_graph.png")
+graph = app.get_graph(xray=True)
+graph.draw_mermaid_png(output_file_path="graph.jpeg")
 
 def run_crag(question: str):
     """Run the CRAG workflow with a given question."""
