@@ -8,7 +8,7 @@ from langchain_openai import OpenAIEmbeddings
 load_dotenv()
 
 class AtlasClient:
-    def __init__(self, atlas_uri=None, dbname="automotive_docs", embedding_model=OpenAIEmbeddings(model="text-embedding-3-large")):
+    def __init__(self, atlas_uri=None, dbname="automotive_docs"):
         if atlas_uri is None:
             atlas_uri = os.getenv("MONGODB_URI")
         if not atlas_uri:
@@ -16,7 +16,7 @@ class AtlasClient:
         self.mongodb_client = MongoClient(atlas_uri)
         self.database = self.mongodb_client[dbname]
         self.vector_store = None
-        self.embedding_model = embedding_model
+        self.embedding_model = OpenAIEmbeddings(model="text-embedding-3-large")
 
     def ping(self):
         """A quick way to test if we can connect to Atlas instance"""
