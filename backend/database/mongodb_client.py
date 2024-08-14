@@ -16,7 +16,7 @@ class AtlasClient:
         self.mongodb_client = MongoClient(atlas_uri)
         self.database = self.mongodb_client[dbname]
         self.vector_store = None
-        self.embedding_model = OpenAIEmbeddings(model="text-embedding-3-large")
+        self.embedding_model = ""
 
     def ping(self):
         """A quick way to test if we can connect to Atlas instance"""
@@ -59,9 +59,10 @@ class AtlasClient:
     def initialize_vector_store(self, collection_name="documents", index_name="default"):
         """Initialize the vector store for similarity search."""
         embeddings = self.embedding_model
+        print( "Embeddings: ", embeddings)
         self.vector_store = MongoDBAtlasVectorSearch(
             collection=self.get_collection(collection_name),
-            embedding=embeddings,
+            embedding=OpenAIEmbeddings(model="text-embedding-3-large"),
             index_name=index_name
         )
 

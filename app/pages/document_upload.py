@@ -3,7 +3,7 @@ import os
 import tempfile
 from backend import document_processing
 
-def render(atlas_client):
+def render():
     st.header("Upload Documents")
     
     uploaded_files = st.file_uploader(
@@ -46,6 +46,3 @@ def render(atlas_client):
 
     # Display uploaded documents
     st.subheader("Uploaded Documents")
-    documents = atlas_client.find("documents")
-    for doc in documents:
-        st.write(f"- {doc['metadata']['file_name']} (Type: {doc['metadata']['file_type']})")
