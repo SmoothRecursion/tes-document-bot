@@ -52,42 +52,42 @@ def create_embeddings(texts: List[str], model_name: str = "openai", progress_cal
     
     return embeddings
 
-def batch_process_file(file_path: str, file_name: str, embedding_model: str = "openai", progress_callback=None, atlas_client: AtlasClient = None) -> None:
+def batch_process_file(file_path: str, file_name: str, progress_callback=None, atlas_client: AtlasClient = None) -> None:
     if atlas_client is None:
         atlas_client = AtlasClient()
-    """Process a file in batches, create embeddings, and store in the database."""
+    """Process a file in batches and store in the database."""
     processed_data_generator = process_file(file_path, file_name)
     
     chunk_index = 0
-    total_progress = 0
+    total_chunks = 0
+    documents = []
+
     for processed_data in processed_data_generator:
         content = processed_data['content']
         metadata = processed_data['metadata']
         
         chunks = split_text(content, chunk_size=1000, chunk_overlap=100)
+        total_chunks += len(chunks)
         
-        def embedding_progress(current, total):
-            nonlocal total_progress
-            total_progress = current / total / 2  # First half of progress
-            if progress_callback:
-                progress_callback(total_progress)
-        
-        embeddings = create_embeddings(chunks, model_name=embedding_model, progress_callback=embedding_progress)
-        
-        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-            document = {
-                'text': chunk,
-                'embedding': embedding,
-                'metadata': metadata,
-                'chunk_index': chunk_index + i,
-            }
-            document = Document(page_content=document['text'], metadata=document['metadata'])
-            atlas_client.insert_document("documents", document)
-            total_progress = 0.5 + (i + 1) / len(chunks) / 2  # Second half of progress
-            if progress_callback:
-                progress_callback(total_progress)
+        for i, chunk in enumerate(chunks):
+            document = Document(
+                page_content=chunk,
+                metadata={
+                    **metadata,
+                    'chunk_index': chunk_index + i,
+                }
+            )
+            documents.append(document)
         
         chunk_index += len(chunks)
+    
+    # Insert documents in batches
+    batch_size = 100
+    for i in range(0, len(documents), batch_size):
+        batch = documents[i:i+batch_size]
+        atlas_client.insert_documents_with_embeddings(batch)
+        if progress_callback:
+            progress_callback((i + len(batch)) / total_chunks)
 
 def process_files(file_paths: List[str], file_names: List[str], embedding_model: str = "openai", progress_callback=None, atlas_client: AtlasClient = None) -> None:
     if atlas_client is None:
