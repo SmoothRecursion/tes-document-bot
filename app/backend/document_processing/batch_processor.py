@@ -65,7 +65,7 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
             if progress_callback:
                 progress_callback(current / total)
         
-        embeddings = create_embeddings(chunks, embedding_model, embedding_progress)
+        embeddings = create_embeddings(chunks, model_name=embedding_model, progress_callback=embedding_progress)
         
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
             document = {
