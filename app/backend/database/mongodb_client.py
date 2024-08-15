@@ -8,15 +8,15 @@ from langchain_openai import OpenAIEmbeddings
 load_dotenv()
 
 class AtlasClient:
-    def __init__(self, atlas_uri=None, dbname="automotive_docs"):
+    def __init__(self, atlas_uri=None, dbname="automotive_docs", collection_name="documents", index_name="vector_index"):
         if atlas_uri is None:
             atlas_uri = os.getenv("MONGODB_URI")
         if not atlas_uri:
             raise ValueError("MONGODB_URI environment variable is not set")
         self.mongodb_client = MongoClient(atlas_uri)
         self.database = self.mongodb_client[dbname]
-        self.vector_store = None
         self.embeddings = OpenAIEmbeddings()
+        self.initialize_vector_store(collection_name, index_name)
 
     def ping(self):
         """A quick way to test if we can connect to Atlas instance"""
@@ -56,25 +56,20 @@ class AtlasClient:
         collection = self.get_collection(collection_name)
         return list(collection.find({"$text": {"$search": query}}).limit(limit))
 
-    def initialize_vector_store(self, collection_name="documents", index_name="vector_index"):
+    def _initialize_vector_store(self, collection_name="documents", index_name="vector_index"):
         """Initialize the vector store for similarity search."""
         self.vector_store = MongoDBAtlasVectorSearch(
             collection=self.get_collection(collection_name),
             embedding=self.embeddings,
             index_name=index_name,
-
         )
 
     def insert_document_with_embedding(self, document):
         """Insert a document into the collection and create an embedding for it."""
-        if self.vector_store is None:
-            raise ValueError("Vector store is not initialized. Call initialize_vector_store() first.")
         self.vector_store.add_documents([document])
 
     def similarity_search(self, query, k=5):
         """Perform a similarity search using the vector store."""
-        if self.vector_store is None:
-            raise ValueError("Vector store is not initialized. Call initialize_vector_store() first.")
         return self.vector_store.similarity_search(query, k=k)
 
     def list_collections(self):
