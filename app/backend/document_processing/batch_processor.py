@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from queue import Queue
+from queue import Queue, Empty
 from backend.document_processing import jsonl_processor, csv_processor
 from backend.database import mongodb_client
 from backend.ai_models.model_loader import load_embedding_model, get_crag_model
@@ -106,7 +106,7 @@ def process_files(file_paths: List[str], file_names: List[str], embedding_model:
                 progress = progress_queue.get(timeout=0.1)
                 if progress_callback:
                     progress_callback(progress / total_files + completed_files / total_files)
-            except Queue.Empty:
+            except Empty:
                 pass
             
             # Check if any futures have completed
