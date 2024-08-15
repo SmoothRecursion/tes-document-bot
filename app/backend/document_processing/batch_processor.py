@@ -2,7 +2,7 @@ import os
 from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue, Empty
-from langchain_core import Document
+from langchain_core.documents import Document
 from backend.document_processing import jsonl_processor, csv_processor
 from backend.database.mongodb_client import AtlasClient
 from backend.ai_models.model_loader import load_embedding_model, get_crag_model
