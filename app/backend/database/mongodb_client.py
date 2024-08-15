@@ -9,8 +9,6 @@ load_dotenv()
 
 class AtlasClient:
     def __init__(self, atlas_uri=None, dbname="automotive_docs"):
-        print("MODEL URI: ", os.getenv("MONGODB_URI"))
-        print("ATLAS URI: ", atlas_uri)
         if atlas_uri is None:
             atlas_uri = os.getenv("MONGODB_URI")
         if not atlas_uri:
@@ -18,7 +16,7 @@ class AtlasClient:
         self.mongodb_client = MongoClient(atlas_uri)
         self.database = self.mongodb_client[dbname]
         self.vector_store = None
-        self.embedding_model = ""
+        self.embeddings = OpenAIEmbeddings()
 
     def ping(self):
         """A quick way to test if we can connect to Atlas instance"""
@@ -60,10 +58,9 @@ class AtlasClient:
 
     def initialize_vector_store(self, collection_name="documents", index_name="default"):
         """Initialize the vector store for similarity search."""
-        embeddings = self.embedding_model
         self.vector_store = MongoDBAtlasVectorSearch(
             collection=self.get_collection(collection_name),
-            embedding=OpenAIEmbeddings(model="text-embedding-3-large"),
+            embedding=self.embeddings,
             index_name=index_name
         )
 
