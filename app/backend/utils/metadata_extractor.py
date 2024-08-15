@@ -1,7 +1,9 @@
 import re
 from typing import Dict, Any
 
-def extract_metadata(content: str) -> Dict[str, Any]:
+def extract_metadata(content: Any) -> Dict[str, Any]:
+    if not isinstance(content, str):
+        content = str(content)
     """
     Extract metadata from the content.
     This is a simple example and can be expanded based on specific needs.

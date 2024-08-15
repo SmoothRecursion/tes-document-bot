@@ -24,6 +24,7 @@ def process_file(file_path: str, file_name: str) -> Generator[Dict[str, Any], No
             content = csv_processor.format_for_similarity(content)
         else:
             metadata = {}
+            content = str(content)  # Ensure content is a string
         
         # Add file-specific metadata
         metadata['file_name'] = file_name
