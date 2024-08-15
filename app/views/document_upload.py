@@ -30,10 +30,11 @@ def render():
                 progress_bar.progress(progress)
                 status_text.text(f"Processing files: {progress:.0%}")
 
-            document_processing.batch_processor.process_files(temp_files, file_names, update_progress)
+            document_processing.batch_processor.process_files(file_paths=temp_files, file_names=file_names, progress_callback=update_progress)
             st.success("All files processed successfully!")
         except Exception as e:
             st.error(f"Error processing files: {str(e)}")
+            st.exception(e)
         finally:
             # Clean up temporary files
             for temp_file in temp_files:
