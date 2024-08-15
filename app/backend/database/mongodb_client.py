@@ -68,6 +68,10 @@ class AtlasClient:
         """Insert a document into the collection and create an embedding for it."""
         self.vector_store.add_documents([document])
 
+    def insert_documents_with_embeddings(self, documents):
+        """Insert multiple documents into the collection and create embeddings for them."""
+        self.vector_store.add_documents(documents)
+
     def similarity_search(self, query, k=5):
         """Perform a similarity search using the vector store."""
         return self.vector_store.similarity_search(query, k=k)
