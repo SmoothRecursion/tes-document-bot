@@ -1,6 +1,7 @@
 import os
 from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from queue import Queue
 from backend.document_processing import jsonl_processor, csv_processor
 from backend.database import mongodb_client
 from backend.ai_models.model_loader import load_embedding_model, get_crag_model
@@ -55,6 +56,7 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
     processed_data_generator = process_file(file_path, file_name)
     
     chunk_index = 0
+    total_progress = 0
     for processed_data in processed_data_generator:
         content = processed_data['content']
         metadata = processed_data['metadata']
@@ -62,8 +64,10 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
         chunks = split_text(content, chunk_size=1000, chunk_overlap=100)
         
         def embedding_progress(current, total):
+            nonlocal total_progress
+            total_progress = current / total / 2  # First half of progress
             if progress_callback:
-                progress_callback(current / total)
+                progress_callback(total_progress)
         
         embeddings = create_embeddings(chunks, model_name=embedding_model, progress_callback=embedding_progress)
         
@@ -75,21 +79,42 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
                 'chunk_index': chunk_index + i,
             }
             mongodb_client.insert_document(document)
+            total_progress = 0.5 + (i + 1) / len(chunks) / 2  # Second half of progress
             if progress_callback:
-                progress_callback((i + 1) / len(chunks))
+                progress_callback(total_progress)
         
         chunk_index += len(chunks)
 
 def process_files(file_paths: List[str], file_names: List[str], embedding_model: str = "openai", progress_callback=None) -> None:
     """Process multiple files concurrently."""
+    progress_queue = Queue()
+    
+    def queue_progress_callback(progress):
+        progress_queue.put(progress)
+    
     with ThreadPoolExecutor() as executor:
         futures = []
         for file_path, file_name in zip(file_paths, file_names):
-            future = executor.submit(batch_process_file, file_path, file_name, embedding_model, progress_callback)
+            future = executor.submit(batch_process_file, file_path, file_name, embedding_model, queue_progress_callback)
             futures.append(future)
         
-        for future in as_completed(futures):
-            future.result()  # This will raise any exceptions that occurred during processing
+        total_files = len(file_paths)
+        completed_files = 0
+        
+        while completed_files < total_files:
+            try:
+                progress = progress_queue.get(timeout=0.1)
+                if progress_callback:
+                    progress_callback(progress / total_files + completed_files / total_files)
+            except Queue.Empty:
+                pass
+            
+            # Check if any futures have completed
+            for future in futures:
+                if future.done():
+                    future.result()  # This will raise any exceptions that occurred during processing
+                    completed_files += 1
+                    break
 
 def run_crag_model(question: str) -> str:
     """Run the CRAG model with the given question."""
