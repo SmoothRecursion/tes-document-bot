@@ -21,9 +21,7 @@ def render():
 
         for file in uploaded_files:
             with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.name)[1]) as temp_file:
-                chunk_size = 5 * 1024 * 1024  # 5MB chunks
-                for chunk in file.chunks(chunk_size):
-                    temp_file.write(chunk)
+                temp_file.write(file.read())
                 temp_files.append(temp_file.name)
                 file_names.append(file.name)
 
