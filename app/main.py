@@ -3,10 +3,6 @@ import sys
 import os
 import hashlib
 
-# Add the project root directory to the Python path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, project_root)
-
 from app.views import chat, document_upload
 
 # Authentication functions
