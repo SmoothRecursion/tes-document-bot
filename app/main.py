@@ -6,7 +6,7 @@ import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 
-from app.pages import chat, document_upload
+from app.views import chat, document_upload
 
 def main():
     st.set_page_config(
