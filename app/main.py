@@ -14,13 +14,13 @@ def check_hashes(password, hashed_text):
         return hashed_text
     return False
 
-# Initialize session state
-if 'authentication_status' not in st.session_state:
-    st.session_state['authentication_status'] = False
-if 'username' not in st.session_state:
-    st.session_state['username'] = ''
-
 def main():
+    # Initialize session state
+    if 'authentication_status' not in st.session_state:
+        st.session_state['authentication_status'] = False
+    if 'username' not in st.session_state:
+        st.session_state['username'] = ''
+
     st.set_page_config(
         page_title="Automotive Document QA",
         page_icon="🚗",
