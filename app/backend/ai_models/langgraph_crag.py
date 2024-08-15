@@ -59,7 +59,7 @@ rag_chain = rag_prompt | llm | StrOutputParser()
 # Graph functions
 def retrieve(state):
     """Retrieve documents"""
-    print("---RETRIEVE---")
+    os.write(1, b"---RETRIEVE---\n")
     question = state["question"]
 
     # Create a new AtlasClient instance for this operation                                                                
@@ -75,7 +75,7 @@ def retrieve(state):
 
 def generate(state):
     """Generate answer"""
-    print("---GENERATE---")
+    os.write(1, b"---GENERATE---\n")
     question = state["question"]
     documents = state["documents"]
     context = "\n\n".join([doc.page_content for doc in documents])
@@ -84,37 +84,37 @@ def generate(state):
 
 def grade_documents(state):
     """Determines whether the retrieved documents are relevant to the question."""
-    print("---CHECK DOCUMENT RELEVANCE TO QUESTION---")
+    os.write(1, b"---CHECK DOCUMENT RELEVANCE TO QUESTION---\n")
     question = state["question"]
     documents = state["documents"]
     filtered_docs = []
     web_search = "No"
     
     if not documents:
-        print("---NO DOCUMENTS RETRIEVED---")
+        os.write(1, b"---NO DOCUMENTS RETRIEVED---\n")
         web_search = "Yes"
     else:
         for d in documents:
             score = retrieval_grader.invoke({"question": question, "document": d.page_content})
             if score.binary_score == "yes":
-                print("---GRADE: DOCUMENT RELEVANT---")
+                os.write(1, b"---GRADE: DOCUMENT RELEVANT---\n")
                 filtered_docs.append(d)
             else:
-                print("---GRADE: DOCUMENT NOT RELEVANT---")
+                os.write(1, b"---GRADE: DOCUMENT NOT RELEVANT---\n")
                 web_search = "Yes"
     
     return {"documents": filtered_docs, "question": question, "web_search": web_search}
 
 def transform_query(state):
     """Transform the query to produce a better question."""
-    print("---TRANSFORM QUERY---")
+    os.write(1, b"---TRANSFORM QUERY---\n")
     question = state["question"]
     better_question = question_rewriter.invoke({"question": question})
     return {"documents": state["documents"], "question": better_question}
 
 def web_search(state):
     """Web search based on the re-phrased question."""
-    print("---WEB SEARCH---")
+    os.write(1, b"---WEB SEARCH---\n")
     question = state["question"]
     docs = web_search_tool.invoke({"query": question})
     web_results = "\n".join([d["content"] for d in docs])
@@ -124,13 +124,13 @@ def web_search(state):
 
 def decide_to_generate(state):
     """Determines whether to generate an answer, or re-generate a question."""
-    print("---ASSESS GRADED DOCUMENTS---")
+    os.write(1, b"---ASSESS GRADED DOCUMENTS---\n")
     web_search = state["web_search"]
     if web_search == "Yes":
-        print("---DECISION: ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, TRANSFORM QUERY---")
+        os.write(1, b"---DECISION: ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, TRANSFORM QUERY---\n")
         return "transform_query"
     else:
-        print("---DECISION: GENERATE---")
+        os.write(1, b"---DECISION: GENERATE---\n")
         return "generate"
 
 # Build Graph
