@@ -21,6 +21,8 @@ def check_hashes(password, hashed_text):
 # Initialize session state
 if 'authentication_status' not in st.session_state:
     st.session_state['authentication_status'] = False
+if 'username' not in st.session_state:
+    st.session_state['username'] = ''
 
 def main():
     st.set_page_config(
@@ -40,12 +42,13 @@ def main():
             # For this example, we'll use a hardcoded username and password
             if username == "admin" and check_hashes(password, make_hashes("password")):
                 st.session_state['authentication_status'] = True
+                st.session_state['username'] = username
                 st.rerun()
             else:
                 st.sidebar.error("Incorrect Username/Password")
     
     if st.session_state['authentication_status']:
-        st.sidebar.success("Logged In as {}".format(username))
+        st.sidebar.success(f"Logged In as {st.session_state['username']}")
         if st.sidebar.button("Logout"):
             st.session_state['authentication_status'] = False
             st.rerun()
