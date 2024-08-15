@@ -2,6 +2,7 @@ import os
 from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue, Empty
+from langchain_core import Document
 from backend.document_processing import jsonl_processor, csv_processor
 from backend.database.mongodb_client import AtlasClient
 from backend.ai_models.model_loader import load_embedding_model, get_crag_model
@@ -75,11 +76,12 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
         
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
             document = {
-                'content': chunk,
+                'text': chunk,
                 'embedding': embedding,
                 'metadata': metadata,
                 'chunk_index': chunk_index + i,
             }
+            document = Document(page_content=document['text'], metadata=document['metadata'])
             atlas_client.insert_document("documents", document)
             total_progress = 0.5 + (i + 1) / len(chunks) / 2  # Second half of progress
             if progress_callback:
