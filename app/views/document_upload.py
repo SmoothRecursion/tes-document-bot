@@ -1,13 +1,9 @@
 import streamlit as st
 import os
 import tempfile
-import logging
 from ..backend import document_processing
 
 def render():
-    # Configure logging to write to a string buffer
-    log_stream = io.StringIO()
-    logging.basicConfig(stream=log_stream, level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
     st.header("Upload Documents")
     
     uploaded_files = st.file_uploader(
@@ -49,7 +45,3 @@ def render():
 
     # Display uploaded documents
     st.subheader("Uploaded Documents")
-
-    # Display logs
-    st.subheader("Processing Logs")
-    st.text_area("Logs", log_stream.getvalue(), height=300)

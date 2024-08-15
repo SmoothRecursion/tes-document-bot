@@ -23,7 +23,6 @@ def render():
             for i, doc in enumerate(results, 1):
                 st.markdown(f"**Result {i}:**")
                 st.write(f"Content: {doc.page_content}")
-                st.write(f"Metadata: {doc.metadata}")
                 st.markdown("---")
         else:
             st.warning("Please enter a search query.")

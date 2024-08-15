@@ -35,16 +35,16 @@ structured_llm_grader = llm.with_structured_output(GradeDocuments)
 web_search_tool = TavilySearchResults(k=3)
 
 # Prompts
-system_grade = """You are a grader assessing relevance of a retrieved document to a user question. 
-    If the document contains keyword(s) or semantic meaning related to the question, grade it as relevant. 
+system_grade = """You are a Mobil 1 grader assessing relevance of a retrieved document to a user question. 
+    If the document contains keyword(s), Products or semantic meaning related to the question, grade it as relevant. 
     Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."""
 grade_prompt = ChatPromptTemplate.from_messages([
     ("system", system_grade),
     ("human", "Retrieved document: \n\n {document} \n\n User question: {question}"),
 ])
 
-system_rewrite = """You a question re-writer that converts an input question to a better version that is optimized 
-     for web search. Look at the input and try to reason about the underlying semantic intent / meaning."""
+system_rewrite = """You a Mobil 1 question re-writer that converts an input question to a better version that is optimized 
+     for web search specifically for Mobil 1 products or solutions. Look at the input and try to reason about the underlying semantic intent / meaning."""
 re_write_prompt = ChatPromptTemplate.from_messages([
     ("system", system_rewrite),
     ("human", "Here is the initial question: \n\n {question} \n Formulate an improved question."),
