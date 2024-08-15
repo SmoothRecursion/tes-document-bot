@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue, Empty
 from backend.document_processing import jsonl_processor, csv_processor
-from backend.database import mongodb_client
+from backend.database.mongodb_client import AtlasClient
 from backend.ai_models.model_loader import load_embedding_model, get_crag_model
 from backend.utils.text_splitter import split_text
 from backend.utils.metadata_extractor import extract_metadata
@@ -51,7 +51,9 @@ def create_embeddings(texts: List[str], model_name: str = "openai", progress_cal
     
     return embeddings
 
-def batch_process_file(file_path: str, file_name: str, embedding_model: str = "openai", progress_callback=None) -> None:
+def batch_process_file(file_path: str, file_name: str, embedding_model: str = "openai", progress_callback=None, atlas_client: AtlasClient = None) -> None:
+    if atlas_client is None:
+        atlas_client = AtlasClient()
     """Process a file in batches, create embeddings, and store in the database."""
     processed_data_generator = process_file(file_path, file_name)
     
@@ -78,14 +80,16 @@ def batch_process_file(file_path: str, file_name: str, embedding_model: str = "o
                 'metadata': metadata,
                 'chunk_index': chunk_index + i,
             }
-            mongodb_client.insert_document(document)
+            atlas_client.insert_document("documents", document)
             total_progress = 0.5 + (i + 1) / len(chunks) / 2  # Second half of progress
             if progress_callback:
                 progress_callback(total_progress)
         
         chunk_index += len(chunks)
 
-def process_files(file_paths: List[str], file_names: List[str], embedding_model: str = "openai", progress_callback=None) -> None:
+def process_files(file_paths: List[str], file_names: List[str], embedding_model: str = "openai", progress_callback=None, atlas_client: AtlasClient = None) -> None:
+    if atlas_client is None:
+        atlas_client = AtlasClient()
     """Process multiple files concurrently."""
     progress_queue = Queue()
     
@@ -95,7 +99,7 @@ def process_files(file_paths: List[str], file_names: List[str], embedding_model:
     with ThreadPoolExecutor() as executor:
         futures = []
         for file_path, file_name in zip(file_paths, file_names):
-            future = executor.submit(batch_process_file, file_path, file_name, embedding_model, queue_progress_callback)
+            future = executor.submit(batch_process_file, file_path, file_name, embedding_model, queue_progress_callback, atlas_client)
             futures.append(future)
         
         total_files = len(file_paths)
