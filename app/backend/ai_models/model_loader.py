@@ -2,18 +2,19 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from .langgraph_crag import run_crag
 
-def load_embedding_model(model_name="openai"):
+def load_embedding_model(model_name=None):
     """
     Load and return the specified embedding model.
     
     Args:
-        model_name (str): The name of the embedding model to load. 
-                          Options: "openai" or "huggingface"
+        model_name (str, optional): The name of the embedding model to load. 
+                                    Options: "openai" or "huggingface"
+                                    Defaults to "openai" if None.
     
     Returns:
         An instance of the specified embedding model.
     """
-    if model_name.lower() == "openai":
+    if model_name is None or model_name.lower() == "openai":
         return OpenAIEmbeddings()
     elif model_name.lower() == "huggingface":
         return HuggingFaceEmbeddings()
