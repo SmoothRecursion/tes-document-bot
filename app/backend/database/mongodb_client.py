@@ -16,7 +16,7 @@ class AtlasClient:
         self.mongodb_client = MongoClient(atlas_uri)
         self.database = self.mongodb_client[dbname]
         self.embeddings = OpenAIEmbeddings()
-        self.initialize_vector_store(collection_name, index_name)
+        self._initialize_vector_store(collection_name, index_name)
 
     def ping(self):
         """A quick way to test if we can connect to Atlas instance"""
