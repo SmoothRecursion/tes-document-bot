@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from backend.document_processing import jsonl_processor
+from backend.document_processing import jsonl_processor, csv_processor
 from backend.database import mongodb_client
 from backend.ai_models.model_loader import load_embedding_model, get_crag_model
 from backend.utils.text_splitter import split_text
@@ -12,18 +12,28 @@ def process_file(file_path: str, file_name: str) -> Generator[Dict[str, Any], No
     file_type = os.path.splitext(file_name)[1].lower()
     
     if file_type in ['.jsonl', '.json']:
-        for content, metadata in jsonl_processor.process_jsonl(file_path):
-            # Add file-specific metadata
-            metadata['file_name'] = file_name
-            metadata['file_type'] = file_type
-            
-            # Extract additional metadata
-            additional_metadata = extract_metadata(content)
-            metadata.update(additional_metadata)
-            
-            yield {'content': content, 'metadata': metadata}
+        processor = jsonl_processor.process_jsonl
+    elif file_type == '.csv':
+        processor = csv_processor.process_csv
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
+    
+    for content in processor(file_path):
+        if isinstance(content, dict):
+            metadata = content
+            content = csv_processor.format_for_similarity(content)
+        else:
+            metadata = {}
+        
+        # Add file-specific metadata
+        metadata['file_name'] = file_name
+        metadata['file_type'] = file_type
+        
+        # Extract additional metadata
+        additional_metadata = extract_metadata(content)
+        metadata.update(additional_metadata)
+        
+        yield {'content': content, 'metadata': metadata}
 
 def create_embeddings(texts: List[str], model_name: str = "openai", progress_callback=None) -> List[List[float]]:
     """Create embeddings for a list of texts."""
