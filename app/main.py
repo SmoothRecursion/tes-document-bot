@@ -40,7 +40,7 @@ def main():
             # For this example, we'll use a hardcoded username and password
             if username == "admin" and check_hashes(password, make_hashes("password")):
                 st.session_state['authentication_status'] = True
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.sidebar.error("Incorrect Username/Password")
     
@@ -48,7 +48,7 @@ def main():
         st.sidebar.success("Logged In as {}".format(username))
         if st.sidebar.button("Logout"):
             st.session_state['authentication_status'] = False
-            st.experimental_rerun()
+            st.rerun()
         
         st.sidebar.title("Navigation")
         page = st.sidebar.radio("Go to", ["Home", "Chat", "Document Upload"])
