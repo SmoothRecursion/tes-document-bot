@@ -108,45 +108,27 @@ def process_files(file_paths: List[str], file_names: List[str], progress_callbac
         atlas_client = AtlasClient()
     """Process multiple files concurrently."""
     logger.info(f"Starting to process {len(file_paths)} files")
-    progress_queue = Queue()
     total_chunks = 0
     processed_chunks = 0
-    
-    def queue_progress_callback(chunks_processed):
-        progress_queue.put(chunks_processed)
-    
+
     with ThreadPoolExecutor() as executor:
-        # First, get the total number of chunks
-        logger.info("Calculating total number of chunks")
-        chunk_counts = list(executor.map(batch_process_file, file_paths, file_names, [None]*len(file_paths), [atlas_client]*len(file_paths)))
-        total_chunks = sum(chunk_counts)
-        logger.info(f"Total chunks to process: {total_chunks}")
-        
-        # Now process the files
         futures = []
         for file_path, file_name in zip(file_paths, file_names):
-            future = executor.submit(batch_process_file, file_path, file_name, queue_progress_callback, atlas_client)
+            future = executor.submit(batch_process_file, file_path, file_name, None, atlas_client)
             futures.append(future)
-        
-        while processed_chunks < total_chunks:
+
+        for future in as_completed(futures):
             try:
-                chunks = progress_queue.get(timeout=0.1)
+                chunks = future.result()
+                total_chunks += chunks
                 processed_chunks += chunks
-                logger.debug(f"Processed {chunks} chunks. Total: {processed_chunks}/{total_chunks}")
+                logger.debug(f"Processed {chunks} chunks. Total: {processed_chunks}")
                 if progress_callback:
                     progress_callback(processed_chunks / total_chunks)
-            except Empty:
-                pass
-            
-            # Check if any futures have completed
-            for future in futures:
-                if future.done():
-                    try:
-                        future.result()  # This will raise any exceptions that occurred during processing
-                    except Exception as e:
-                        logger.error(f"Error processing file: {str(e)}")
-                        logger.exception(e)
-    
+            except Exception as e:
+                logger.error(f"Error processing file: {str(e)}")
+                logger.exception(e)
+
     logger.info(f"Finished processing all files. Total chunks processed: {processed_chunks}")
 
 def run_crag_model(question: str) -> str:
