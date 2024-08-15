@@ -54,14 +54,9 @@ def main():
             st.rerun()
         
         st.sidebar.title("Navigation")
-        page = st.sidebar.radio("Go to", ["Home", "Chat", "Document Upload"])
+        page = st.sidebar.radio("Go to", ["Chat", "Document Upload"])
 
-        if page == "Home":
-            st.title("📄 Automotive Document Question Answering")
-            st.write(
-                "Upload automotive-related documents, search through them, and ask questions about their content."
-            )
-        elif page == "Chat":
+        if page == "Chat":
             chat.render()
         elif page == "Document Upload":
             document_upload.render()
