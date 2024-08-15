@@ -28,7 +28,7 @@ def render():
         try:
             def update_progress(progress):
                 progress_bar.progress(progress)
-                status_text.text(f"Processing files: {progress:.0%}")
+                status_text.text(f"Processing chunks: {progress:.0%}")
 
             document_processing.batch_processor.process_files(file_paths=temp_files, file_names=file_names, progress_callback=update_progress)
             st.success("All files processed successfully!")

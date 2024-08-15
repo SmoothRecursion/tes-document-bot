@@ -52,10 +52,10 @@ def create_embeddings(texts: List[str], model_name: str = "openai", progress_cal
     
     return embeddings
 
-def batch_process_file(file_path: str, file_name: str, progress_callback=None, atlas_client: AtlasClient = None) -> None:
+def batch_process_file(file_path: str, file_name: str, progress_callback=None, atlas_client: AtlasClient = None) -> int:
     if atlas_client is None:
         atlas_client = AtlasClient()
-    """Process a file in batches and store in the database."""
+    """Process a file in batches and store in the database. Returns the total number of chunks processed."""
     processed_data_generator = process_file(file_path, file_name)
     
     chunk_index = 0
@@ -87,31 +87,38 @@ def batch_process_file(file_path: str, file_name: str, progress_callback=None, a
         batch = documents[i:i+batch_size]
         atlas_client.insert_documents_with_embeddings(batch)
         if progress_callback:
-            progress_callback((i + len(batch)) / total_chunks)
+            progress_callback(i + len(batch))
+    
+    return total_chunks
 
-def process_files(file_paths: List[str], file_names: List[str], embedding_model: str = "openai", progress_callback=None, atlas_client: AtlasClient = None) -> None:
+def process_files(file_paths: List[str], file_names: List[str], progress_callback=None, atlas_client: AtlasClient = None) -> None:
     if atlas_client is None:
         atlas_client = AtlasClient()
     """Process multiple files concurrently."""
     progress_queue = Queue()
+    total_chunks = 0
+    processed_chunks = 0
     
-    def queue_progress_callback(progress):
-        progress_queue.put(progress)
+    def queue_progress_callback(chunks_processed):
+        progress_queue.put(chunks_processed)
     
     with ThreadPoolExecutor() as executor:
+        # First, get the total number of chunks
+        chunk_counts = list(executor.map(batch_process_file, file_paths, file_names, [None]*len(file_paths), [atlas_client]*len(file_paths)))
+        total_chunks = sum(chunk_counts)
+        
+        # Now process the files
         futures = []
         for file_path, file_name in zip(file_paths, file_names):
-            future = executor.submit(batch_process_file, file_path, file_name, embedding_model, queue_progress_callback, atlas_client)
+            future = executor.submit(batch_process_file, file_path, file_name, queue_progress_callback, atlas_client)
             futures.append(future)
         
-        total_files = len(file_paths)
-        completed_files = 0
-        
-        while completed_files < total_files:
+        while processed_chunks < total_chunks:
             try:
-                progress = progress_queue.get(timeout=0.1)
+                chunks = progress_queue.get(timeout=0.1)
+                processed_chunks += chunks
                 if progress_callback:
-                    progress_callback(progress / total_files + completed_files / total_files)
+                    progress_callback(processed_chunks / total_chunks)
             except Empty:
                 pass
             
@@ -119,8 +126,6 @@ def process_files(file_paths: List[str], file_names: List[str], embedding_model:
             for future in futures:
                 if future.done():
                     future.result()  # This will raise any exceptions that occurred during processing
-                    completed_files += 1
-                    break
 
 def run_crag_model(question: str) -> str:
     """Run the CRAG model with the given question."""
