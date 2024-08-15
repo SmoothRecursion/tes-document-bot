@@ -87,7 +87,7 @@ def batch_process_file(file_path: str, file_name: str, progress_callback=None, a
         batch = documents[i:i+batch_size]
         atlas_client.insert_documents_with_embeddings(batch)
         if progress_callback:
-            progress_callback(i + len(batch))
+            progress_callback(len(batch))
     
     return total_chunks
 
