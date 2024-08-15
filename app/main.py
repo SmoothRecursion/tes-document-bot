@@ -3,7 +3,7 @@ import sys
 import os
 import hashlib
 
-from app.views import chat, document_upload
+from app.views import chat, document_upload, similarity_search
 
 # Authentication functions
 def make_hashes(password):
@@ -50,12 +50,14 @@ def main():
             st.rerun()
         
         st.sidebar.title("Navigation")
-        page = st.sidebar.radio("Go to", ["Chat", "Document Upload"])
+        page = st.sidebar.radio("Go to", ["Chat", "Document Upload", "Similarity Search"])
 
         if page == "Chat":
             chat.render()
         elif page == "Document Upload":
             document_upload.render()
+        elif page == "Similarity Search":
+            similarity_search.render()
 
         # Check for OpenAI API key
         # if not app_config.OPENAI_API_KEY:
