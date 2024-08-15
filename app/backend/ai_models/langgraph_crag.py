@@ -1,6 +1,7 @@
 import os
 from typing import List
 from typing_extensions import TypedDict
+from dotenv import load_dotenv
 from langchain.schema import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
@@ -11,6 +12,9 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import END, StateGraph, START
 from backend.database.mongodb_client import AtlasClient
 
+
+# Load environment variables
+load_dotenv()
 
 # Data model for grading documents
 class GradeDocuments(BaseModel):
@@ -29,14 +33,6 @@ class GraphState(TypedDict):
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeDocuments)
 web_search_tool = TavilySearchResults(k=3)
-
-def initialize_atlas_client():
-    atlas_client = AtlasClient()  # You can change this to "huggingface" if needed
-    atlas_client.initialize_vector_store()
-    return atlas_client
-
-# Initialize MongoDB Atlas client and vector store
-atlas_client = initialize_atlas_client()
 
 # Prompts
 system_grade = """You are a grader assessing relevance of a retrieved document to a user question. 
@@ -65,8 +61,15 @@ def retrieve(state):
     """Retrieve documents"""
     print("---RETRIEVE---")
     question = state["question"]
+
+    # Create a new AtlasClient instance for this operation                                                                
+    atlas_client = AtlasClient(atlas_uri=os.getenv("MONGODB_URI"), dbname="automotive_docs")     
+
     # Use vector store to retrieve relevant documents
     docs = atlas_client.similarity_search(question, k=5)
+
+    docs = []
+
     documents = [Document(page_content=doc.page_content, metadata=doc.metadata) for doc in docs]
     return {"documents": documents, "question": question}
 

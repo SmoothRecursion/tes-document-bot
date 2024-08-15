@@ -14,7 +14,6 @@ def render():
         if query:
             # Initialize AtlasClient
             atlas_client = AtlasClient()
-            atlas_client.initialize_vector_store()
 
             # Perform similarity search
             results = atlas_client.similarity_search(query, k=k)
