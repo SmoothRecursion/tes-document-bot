@@ -9,6 +9,8 @@ load_dotenv()
 
 class AtlasClient:
     def __init__(self, atlas_uri=None, dbname="automotive_docs"):
+        print("MODEL URI: ", os.getenv("MONGODB_URI"))
+        print("ATLAS URI: ", atlas_uri)
         if atlas_uri is None:
             atlas_uri = os.getenv("MONGODB_URI")
         if not atlas_uri:
